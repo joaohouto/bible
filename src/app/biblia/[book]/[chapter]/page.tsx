@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,17 +18,13 @@ interface CapituloData {
   versiculos: Versiculo[];
 }
 
-/**
- * Extracts [slug, capitulo] directly from the pathname.
- * e.g. "/biblia/genesis/2" → ["genesis", 2]
- * This avoids stale values from useParams() App Router cache.
- */
-function useChapterParams(): { slug: string; capitulo: number } {
+function useChapterParams() {
   const pathname = usePathname();
   const parts = pathname.split("/").filter(Boolean);
-  const slug = parts[1] ?? "genesis";
-  const capitulo = Number(parts[2] ?? "1");
-  return { slug, capitulo };
+  return {
+    slug: parts[1] ?? "genesis",
+    capitulo: Number(parts[2] ?? "1"),
+  };
 }
 
 function VerseItem({ v }: { v: Versiculo }) {
@@ -77,28 +73,36 @@ export default function ChapterPage() {
   const [error, setError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setData(null);
-    setError(false);
-
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-
-    fetch(`/api/biblia/${slug}/${capitulo}`)
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((json: CapituloData) => setData(json))
-      .catch(() => setError(true));
-  }, [slug, capitulo]);
-
   const totalCapitulos = data?.totalCapitulosLivro ?? 1;
   const nomeLivro = data?.livro ?? "";
 
-  const goChapter = (n: number) => {
-    if (n < 1 || n > totalCapitulos) return;
-    router.push(`/biblia/${slug}/${n}`);
-  };
+  const goChapter = useCallback(
+    (n: number) => {
+      if (n >= 1 && n <= totalCapitulos) router.push(`/biblia/${slug}/${n}`);
+    },
+    [router, slug, totalCapitulos],
+  );
+
+  useEffect(() => {
+    setData(null);
+    setError(false);
+    scrollRef.current?.scrollTo(0, 0);
+
+    fetch(`/api/biblia/${slug}/${capitulo}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(setData)
+      .catch(() => setError(true));
+  }, [slug, capitulo]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") goChapter(capitulo - 1);
+      if (e.key === "ArrowRight") goChapter(capitulo + 1);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [capitulo, goChapter]);
 
   return (
     <div className="h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden selection:bg-zinc-200 dark:selection:bg-zinc-800">

@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import bibliaData from "@/data/bibliaAveMaria.json";
-import { slugify } from "@/lib/utils";
+import { promises as fs } from "fs";
+import path from "path";
 
-import { BibliaJSON, Livro } from "@/types/biblia";
-
-const biblia = bibliaData as BibliaJSON;
-
-export const revalidate = false;
+export const dynamic = "force-static";
 
 export async function GET(
   request: NextRequest,
@@ -16,36 +12,35 @@ export async function GET(
     const resolvedParams = await params;
     const slug = resolvedParams.slug;
 
-    // /api/biblia -> Retorna índice com total de capítulos
-    if (!slug || slug.length === 0) {
-      const mapearLivros = (livros: Livro[]) =>
-        livros.map((l) => ({
-          nome: l.nome,
-          slug: slugify(l.nome),
-          totalCapitulos: l.capitulos.length,
-        }));
+    const dataFolder = path.join(process.cwd(), "src", "data", "biblia");
 
-      return NextResponse.json({
-        antigoTestamento: mapearLivros(biblia.antigoTestamento),
-        novoTestamento: mapearLivros(biblia.novoTestamento),
-      });
+    // Rota: /api/biblia -> Retorna o índice instantaneamente
+    if (!slug || slug.length === 0) {
+      const indicePath = path.join(dataFolder, "indice.json");
+      const indiceRaw = await fs.readFile(indicePath, "utf-8");
+      return NextResponse.json(JSON.parse(indiceRaw));
     }
 
     const [livroSlug, capituloNumStr] = slug;
-    const todosLivros = [...biblia.antigoTestamento, ...biblia.novoTestamento];
-    const livro = todosLivros.find((l) => slugify(l.nome) === livroSlug);
 
-    if (!livro) {
+    // Tenta ler o arquivo do livro específico (ex: genesis.json)
+    let livroRaw: string;
+    try {
+      const livroPath = path.join(dataFolder, `${livroSlug}.json`);
+      livroRaw = await fs.readFile(livroPath, "utf-8");
+    } catch (e) {
       return NextResponse.json(
         { error: "Livro não encontrado" },
         { status: 404 },
       );
     }
 
-    // /api/biblia/[livro]/[capitulo]
+    const livro = JSON.parse(livroRaw);
+
+    // Rota: /api/biblia/[livro]/[capitulo]
     if (capituloNumStr) {
       const num = parseInt(capituloNumStr);
-      const capitulo = livro.capitulos.find((c) => c.capitulo === num);
+      const capitulo = livro.capitulos.find((c: any) => c.capitulo === num);
 
       if (!capitulo) {
         return NextResponse.json(
@@ -63,7 +58,7 @@ export async function GET(
       });
     }
 
-    // /api/biblia/[livro]
+    // Rota: /api/biblia/[livro]
     return NextResponse.json({
       nome: livro.nome,
       slug: livroSlug,
@@ -71,7 +66,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("API Error:", error);
-
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
