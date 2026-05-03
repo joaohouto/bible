@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, ChevronDown, Search, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { OfflineControls } from "@/components/offline-controls";
 
 interface Livro {
   nome: string;
@@ -285,7 +286,10 @@ export default function BibleIndex() {
             </div>
           </div>
 
-          <ThemeToggle />
+          <div className="flex items-center gap-0.5">
+            <OfflineControls />
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* search bar */}
