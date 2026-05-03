@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { BookOpen, ChevronDown, Search, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { OfflineControls } from "@/components/offline-controls";
+import { get } from "idb-keyval";
 
 interface Livro {
   nome: string;
   slug: string;
   totalCapitulos: number;
+  autor?: string;
 }
 
 interface BibliaData {
@@ -63,7 +65,7 @@ function BookRow({
   onSelectChapter: (slug: string, n: number) => void;
   highlight?: string;
 }) {
-  // Highlight matching text in search
+  // Highlight matching text in search (ignorando acentos)
   const renderName = (text: string) => {
     if (!highlight) return text;
 
@@ -96,19 +98,24 @@ function BookRow({
         rounded-2xl overflow-hidden border transition-all duration-200
         ${
           isOpen
-            ? "bg-zinc-100/80 dark:bg-zinc-800/80 border-zinc-300 dark:border-zinc-600"
-            : "bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+            ? "bg-zinc-100/80 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600"
+            : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
         }
       `}
     >
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-4 text-left"
+        className="w-full flex items-center justify-between px-4 py-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
       >
         <div className="flex items-baseline gap-2.5">
           <span className="font-medium text-[15px] text-zinc-900 dark:text-zinc-100 font-sans">
             {renderName(livro.nome)}
           </span>
+          {livro.autor && (
+            <span className="text-zinc-400 dark:text-zinc-500 text-xs font-sans">
+              {livro.autor}
+            </span>
+          )}
         </div>
         <ChevronDown
           size={16}
@@ -125,7 +132,7 @@ function BookRow({
         }`}
       >
         <div className="mx-3 mb-1">
-          <div className="h-px bg-zinc-200 dark:bg-zinc-800 mb-1" />
+          <div className="h-px bg-zinc-200 dark:bg-zinc-700/50 mb-1" />
           <ChapterGrid
             total={livro.totalCapitulos}
             slug={livro.slug}
@@ -198,13 +205,48 @@ export default function BibleIndex() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/biblia")
-      .then((r) => {
+    const loadIndexData = async () => {
+      try {
+        // 1. Tenta carregar do IndexedDB primeiro (Acesso Offline Imediato)
+        const bibliaOffline = await get("biblia-offline");
+
+        if (bibliaOffline) {
+          // Função auxiliar para recriar o slug igual à sua API original
+          const generateSlug = (str: string) =>
+            str
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^\w-]+/g, "");
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mapearLivros = (livros: any[]) =>
+            livros.map((l) => ({
+              nome: l.nome,
+              slug: generateSlug(l.nome),
+              totalCapitulos: l.capitulos.length,
+            }));
+
+          setData({
+            antigoTestamento: mapearLivros(bibliaOffline.antigoTestamento),
+            novoTestamento: mapearLivros(bibliaOffline.novoTestamento),
+          });
+          return; // Finaliza aqui, não bate na Vercel!
+        }
+
+        // 2. Se o banco offline estiver vazio, faz fallback para a API
+        const r = await fetch("/api/biblia");
         if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((json: BibliaData) => setData(json))
-      .catch(() => setError(true));
+        const json = await r.json();
+        setData(json);
+      } catch (err) {
+        console.error("Erro ao carregar índice:", err);
+        setError(true);
+      }
+    };
+
+    loadIndexData();
   }, []);
 
   useEffect(() => {
@@ -262,7 +304,7 @@ export default function BibleIndex() {
       <header
         className={`max-w-2xl mx-auto w-full flex-shrink-0 relative z-20 transition-all duration-300 ease-in-out ${
           scrolled
-            ? "bg-white/75 dark:bg-zinc-950/75 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800"
+            ? "bg-white/75 dark:bg-zinc-950/75 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 shadow-sm"
             : "bg-transparent border-b border-transparent"
         }`}
       >
