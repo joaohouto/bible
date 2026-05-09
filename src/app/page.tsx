@@ -2,10 +2,16 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, ChevronDown, Search, X } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  QuoteIcon,
+  Search,
+  Shuffle,
+  X,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { OfflineControls } from "@/components/offline-controls";
-import { get } from "idb-keyval";
+import Link from "next/link";
 
 interface Livro {
   nome: string;
@@ -207,35 +213,6 @@ export default function BibleIndex() {
   useEffect(() => {
     const loadIndexData = async () => {
       try {
-        // 1. Tenta carregar do IndexedDB primeiro (Acesso Offline Imediato)
-        const bibliaOffline = await get("biblia-offline");
-
-        if (bibliaOffline) {
-          // Função auxiliar para recriar o slug igual à sua API original
-          const generateSlug = (str: string) =>
-            str
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .toLowerCase()
-              .replace(/\s+/g, "-")
-              .replace(/[^\w-]+/g, "");
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const mapearLivros = (livros: any[]) =>
-            livros.map((l) => ({
-              nome: l.nome,
-              slug: generateSlug(l.nome),
-              totalCapitulos: l.capitulos.length,
-            }));
-
-          setData({
-            antigoTestamento: mapearLivros(bibliaOffline.antigoTestamento),
-            novoTestamento: mapearLivros(bibliaOffline.novoTestamento),
-          });
-          return; // Finaliza aqui, não bate na Vercel!
-        }
-
-        // 2. Se o banco offline estiver vazio, faz fallback para a API
         const r = await fetch("/api/biblia");
         if (!r.ok) throw new Error();
         const json = await r.json();
@@ -329,7 +306,21 @@ export default function BibleIndex() {
           </div>
 
           <div className="flex items-center gap-0.5">
-            <OfflineControls />
+            <Link
+              href="/inspiracao"
+              className={`size-9 flex items-center justify-center rounded-full
+                        text-zinc-500 dark:text-zinc-400
+                          hover:text-zinc-900 dark:hover:text-white
+                          hover:bg-black/[0.07] dark:hover:bg-white/10
+                         active:bg-black/[0.12] dark:active:bg-white/20
+                           transition-all duration-150`}
+            >
+              <QuoteIcon
+                size={16}
+                strokeWidth={2}
+                className="text-zinc-500 dark:text-zinc-400"
+              />
+            </Link>
             <ThemeToggle />
           </div>
         </div>

@@ -21,7 +21,7 @@ export default function InspiracaoPage() {
   const [bgImage, setBgImage] = useState<string>("");
   const [loadingData, setLoadingData] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isSharing, setIsSharing] = useState(false); // Feedback visual no botão
+  const [isSharing, setIsSharing] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

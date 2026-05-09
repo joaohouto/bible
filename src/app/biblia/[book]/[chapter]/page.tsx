@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { get } from "idb-keyval";
 
 interface Versiculo {
   versiculo: number;
@@ -91,41 +90,6 @@ export default function ChapterPage() {
 
     const loadData = async () => {
       try {
-        // 1. Tenta pegar do banco offline primeiro
-        const bibliaOffline = await get("biblia-offline");
-
-        if (bibliaOffline) {
-          const todosLivros = [
-            ...bibliaOffline.antigoTestamento,
-            ...bibliaOffline.novoTestamento,
-          ];
-          const livroData = todosLivros.find(
-            (l: any) =>
-              l.nome
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .toLowerCase()
-                .replace(/\s+/g, "-") === slug,
-          );
-
-          if (livroData) {
-            const capituloData = livroData.capitulos.find(
-              (c: any) => c.capitulo === capitulo,
-            );
-            if (capituloData) {
-              setData({
-                livro: livroData.nome,
-                slug: slug,
-                totalCapitulosLivro: livroData.capitulos.length,
-                capitulo: capituloData.capitulo,
-                versiculos: capituloData.versiculos,
-              });
-              return; // Sai da função, não precisa bater na API!
-            }
-          }
-        }
-
-        // 2. Se não tem offline ou deu algum erro na busca, faz fallback pra API original
         const res = await fetch(`/api/biblia/${slug}/${capitulo}`);
         if (!res.ok) throw new Error();
         const json = await res.json();
@@ -187,7 +151,7 @@ export default function ChapterPage() {
       </div>
 
       <div
-        className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-5 py-3
+        className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-5 py-3 pb-5
         backdrop-blur-[32px] backdrop-saturate-200 backdrop-brightness-[1.08]
         bg-gradient-to-b from-white/60 to-white/30 dark:from-white/[0.09] dark:to-white/[0.04]
         border-t border-black/[0.05] dark:border-white/[0.10]
