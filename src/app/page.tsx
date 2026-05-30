@@ -206,8 +206,6 @@ export default function BibleIndex() {
   const [error, setError] = useState(false);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [scrolled, setScrolled] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -224,14 +222,6 @@ export default function BibleIndex() {
     };
 
     loadIndexData();
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handler = () => setScrolled(el.scrollTop > 10);
-    el.addEventListener("scroll", handler, { passive: true });
-    return () => el.removeEventListener("scroll", handler);
   }, []);
 
   // filter books by search query
@@ -277,22 +267,17 @@ export default function BibleIndex() {
     filtered.novoTestamento.length === 0;
 
   return (
-    <div className="h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col overflow-hidden selection:bg-zinc-200 dark:selection:bg-zinc-800">
-      <header
-        className={`max-w-2xl mx-auto w-full flex-shrink-0 relative z-20 transition-all duration-300 ease-in-out ${
-          scrolled
-            ? "bg-white/75 dark:bg-zinc-950/75 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 shadow-sm"
-            : "bg-transparent border-b border-transparent"
-        }`}
-      >
-        {/* top row */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 selection:bg-zinc-200 dark:selection:bg-zinc-800">
+      <header className="fixed top-0 left-0 right-0 z-20 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <div className="max-w-2xl mx-auto w-full">
+          {/* top row */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+            <div className="w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 bg-gradient-to-b from-amber-400 to-amber-500 shadow-sm shadow-amber-500/20">
               <BookOpen
                 size={19}
                 strokeWidth={1.6}
-                className="text-zinc-800 dark:text-zinc-200"
+                className="text-white"
               />
             </div>
             <div>
@@ -306,6 +291,22 @@ export default function BibleIndex() {
           </div>
 
           <div className="flex items-center gap-0.5">
+            <Link
+              href="/terco"
+              title="Terço Sagrado"
+              className={`size-9 flex items-center justify-center rounded-full
+                        text-zinc-500 dark:text-zinc-400
+                          hover:text-zinc-900 dark:hover:text-white
+                          hover:bg-black/[0.07] dark:hover:bg-white/10
+                         active:bg-black/[0.12] dark:active:bg-white/20
+                           transition-all duration-150`}
+            >
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+                <ellipse cx="8.5" cy="6.5" rx="5.5" ry="4.5" />
+                <line x1="8.5" y1="11" x2="8.5" y2="17" />
+                <line x1="5.5" y1="14" x2="11.5" y2="14" />
+              </svg>
+            </Link>
             <Link
               href="/inspiracao"
               className={`size-9 flex items-center justify-center rounded-full
@@ -325,8 +326,8 @@ export default function BibleIndex() {
           </div>
         </div>
 
-        {/* search bar */}
-        <div className="px-5 pb-4 pt-1">
+          {/* search bar */}
+          <div className="px-5 pb-4 pt-1">
           <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-zinc-200 dark:focus-within:ring-zinc-800 transition-shadow">
             <Search
               size={14}
@@ -359,9 +360,10 @@ export default function BibleIndex() {
             )}
           </div>
         </div>
+        </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <main className="pt-32">
         <div className="max-w-xl mx-auto px-4 pt-4 pb-20">
           {error && (
             <p className="text-center text-red-500 dark:text-red-400 mt-10 font-sans">
@@ -403,7 +405,7 @@ export default function BibleIndex() {
             </>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

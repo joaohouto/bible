@@ -16,8 +16,45 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bíblia Ave Maria",
-  description: "Sagrada Escritura",
+  title: {
+    default: "Bíblia Sagrada · Ave Maria",
+    template: "%s · Bíblia Ave Maria",
+  },
+  description:
+    "Leia a Bíblia Sagrada Católica completa online, versão Ave Maria. Antigo e Novo Testamento, versículos, guia para rezar o Terço e muito mais.",
+  keywords: [
+    "bíblia sagrada",
+    "bíblia católica",
+    "bíblia ave maria",
+    "sagrada escritura",
+    "antigo testamento",
+    "novo testamento",
+    "versículos bíblicos",
+    "terço católico",
+    "rosário",
+    "orações católicas",
+  ],
+  authors: [{ name: "Bíblia Ave Maria" }],
+  creator: "Bíblia Ave Maria",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Bíblia Ave Maria",
+    title: "Bíblia Sagrada · Ave Maria",
+    description:
+      "Leia a Bíblia Sagrada Católica completa online. Versão Ave Maria com Antigo e Novo Testamento.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Bíblia Sagrada · Ave Maria",
+    description:
+      "Leia a Bíblia Sagrada Católica completa online. Versão Ave Maria.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
