@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { RefreshCw, Share2 } from "lucide-react";
 
+let cachedIndex: { antigoTestamento: any[]; novoTestamento: any[] } | null = null;
+
 const BACKGROUNDS = [
   "https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2074&auto=format&fit=crop",
@@ -32,9 +34,12 @@ export default function InspiracaoPage() {
     setBgImage(BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)]);
 
     try {
-      const resIndice = await fetch("/api/biblia");
-      if (!resIndice.ok) throw new Error();
-      const indice = await resIndice.json();
+      if (!cachedIndex) {
+        const resIndice = await fetch("/api/biblia");
+        if (!resIndice.ok) throw new Error();
+        cachedIndex = await resIndice.json();
+      }
+      const indice = cachedIndex;
 
       const todosLivros = [
         ...indice.antigoTestamento,
@@ -111,7 +116,7 @@ export default function InspiracaoPage() {
         a.href = url;
         a.download = `versiculo-${Date.now()}.png`;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
     } catch (err) {
       console.error("Erro ao compartilhar a imagem", err);
@@ -151,10 +156,6 @@ export default function InspiracaoPage() {
 
       {/* Conteúdo Central */}
       <div className="relative z-10 flex flex-col items-center justify-center w-full px-6 md:px-12 max-w-4xl mx-auto text-center">
-        {!isFullyLoaded && (
-          <div className="absolute inset-0  w-full px-6 z-0"></div>
-        )}
-
         {/* Versículo */}
         <div
           className={`flex flex-col items-center transition-all duration-700 ease-out transform ${

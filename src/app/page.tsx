@@ -7,7 +7,6 @@ import {
   ChevronDown,
   QuoteIcon,
   Search,
-  Shuffle,
   X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -293,6 +292,7 @@ export default function BibleIndex() {
           <div className="flex items-center gap-0.5">
             <Link
               href="/terco"
+              aria-label="Terço Sagrado"
               title="Terço Sagrado"
               className={`size-9 flex items-center justify-center rounded-full
                         text-zinc-500 dark:text-zinc-400

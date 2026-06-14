@@ -178,7 +178,7 @@ function buildSteps(key: MysteryKey): Step[] {
     beadId: null,
     title: "Terço concluído",
     subtitle: "Louvado seja Nosso Senhor Jesus Cristo!",
-    text: "Que a intercessão de Nossa Senhora vos acompanhe e proteja.\n\nIn Nomine Patris et Filii et Spiritus Sancti.",
+    text: "Que a intercessão de Nossa Senhora vos acompanhe e proteja.\n\nEm nome do Pai, do Filho e do Espírito Santo. Amém.",
     isEnd: true,
   });
 
@@ -504,7 +504,7 @@ function todaysMystery(): MysteryKey {
   return map[new Date().getDay()];
 }
 
-const TOTAL_STEPS = 73;
+const TOTAL_STEPS = buildSteps("gozosos").length;
 
 function MysterySelector({
   onSelect,
@@ -705,11 +705,11 @@ function PrayerGuide({
   const handleBeadTap = useCallback(
     (beadId: string) => {
       let idx = steps.findIndex(
-        (s, i) => s.beadId === beadId && i >= currentStep,
+        (step, i) => step.beadId === beadId && i >= currentStep,
       );
       if (idx === -1)
         idx = steps.reduce(
-          (last, s, i) => (s.beadId === beadId ? i : last),
+          (last, step, i) => (step.beadId === beadId ? i : last),
           -1,
         );
       if (idx !== -1) onJump(idx);

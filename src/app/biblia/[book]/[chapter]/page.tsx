@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -18,21 +18,16 @@ interface CapituloData {
   versiculos: Versiculo[];
 }
 
-function useChapterParams() {
-  const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
-  return {
-    slug: parts[1] ?? "genesis",
-    capitulo: Number(parts[2] ?? "1"),
-  };
-}
-
 function VerseItem({ v }: { v: Versiculo }) {
   const [highlighted, setHighlighted] = useState(false);
+  const toggle = () => setHighlighted((h) => !h);
 
   return (
     <p
-      onClick={() => setHighlighted((h) => !h)}
+      role="button"
+      tabIndex={0}
+      onClick={toggle}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggle()}
       className={`
         mb-5 leading-[1.85] cursor-pointer rounded px-2 -mx-2 py-0.5
         transition-colors duration-200 select-none font-serif
@@ -67,7 +62,8 @@ function VersesSkeleton() {
 
 export default function ChapterPage() {
   const router = useRouter();
-  const { slug, capitulo } = useChapterParams();
+  const { book: slug, chapter } = useParams<{ book: string; chapter: string }>();
+  const capitulo = Number(chapter);
 
   const [data, setData] = useState<CapituloData | null>(null);
   const [error, setError] = useState(false);
@@ -94,7 +90,7 @@ export default function ChapterPage() {
         if (!res.ok) throw new Error();
         const json = await res.json();
         setData(json);
-      } catch (err) {
+      } catch {
         setError(true);
       }
     };
